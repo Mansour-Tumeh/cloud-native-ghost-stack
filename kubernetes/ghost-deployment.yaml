@@ -41,3 +41,18 @@ spec:
       - name: ghost-content
         persistentVolumeClaim:
           claimName: ghost-content-pvc
+
+env:
+  - name: database__client
+    value: "mysql"
+  - name: database__connection__host
+    value: "mysql" 
+  - name: database__connection__user
+    value: "ghost"
+  - name: database__connection__password
+    valueFrom:
+      secretKeyRef:
+        name: ghost-db-secrets
+        key: mysql-password
+  - name: database__connection__database
+    value: "ghost"
