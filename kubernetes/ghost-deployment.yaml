@@ -3,8 +3,8 @@ kind: Deployment
 metadata:
   name: ghost
 spec:
-strategy:
-    type: Recreate
+  strategy:
+    type: Recreate 
   replicas: 1 
   selector:
     matchLabels:
@@ -20,20 +20,19 @@ strategy:
         env:
         - name: url
           value: https://blog.dl4it.com
-        # MySQL Configuration
         - name: database__client
-          value: mysql
+          value: "mysql"
         - name: database__connection__host
-          value: mysql 
+          value: "mysql" 
         - name: database__connection__user
-          value: root
+          value: "ghost" # Use the dedicated ghost user
         - name: database__connection__password
           valueFrom:
             secretKeyRef:
               name: ghost-db-secrets
-              key: mysql-root-password
+              key: mysql-password # Use the user password, not root
         - name: database__connection__database
-          value: ghost
+          value: "ghost"
         ports:
         - containerPort: 2368
         volumeMounts:
@@ -43,18 +42,3 @@ strategy:
       - name: ghost-content
         persistentVolumeClaim:
           claimName: ghost-content-pvc
-
-env:
-  - name: database__client
-    value: "mysql"
-  - name: database__connection__host
-    value: "mysql" 
-  - name: database__connection__user
-    value: "ghost"
-  - name: database__connection__password
-    valueFrom:
-      secretKeyRef:
-        name: ghost-db-secrets
-        key: mysql-password
-  - name: database__connection__database
-    value: "ghost"
