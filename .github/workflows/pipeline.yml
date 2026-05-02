@@ -5,7 +5,6 @@ on:
     branches: [ "main" ]
 
 jobs:
-  
   terraform-check:
     runs-on: ubuntu-latest
     steps:
@@ -21,12 +20,7 @@ jobs:
           terraform validate
         working-directory: ./terraform
 
-      - name: Generate and Apply Secrets
-        run: |
-          kubectl create secret generic ghost-db-secrets \
-            --from-literal=mysql-root-password='${{ secrets.MYSQL_ROOT_PASSWORD }}' \
-            --from-literal=mysql-password='${{ secrets.MYSQL_PASSWORD }}' \
-            --dry-run=client -o yaml | kubectl apply -f -
+ 
   deploy:
     needs: terraform-check
     runs-on: self-hosted  
@@ -34,10 +28,21 @@ jobs:
       - name: Checkout Code
         uses: actions/checkout@v4
 
-      - name: Deploy Manifests
+      - name: Generate and Apply Secrets
         run: |
-          # Pointing to the local K3s config on your master node
+          # Pointing to the local K3s config
           export KUBECONFIG=/etc/rancher/k3s/k3s.yaml
           
-          # Apply the entire kubernetes directory to ensure everything stays in sync
+          # Dynamically create the secret from GitHub Action Secrets
+          kubectl create secret generic ghost-db-secrets \
+            --from-literal=mysql-root-password='${{ secrets.MYSQL_ROOT_PASSWORD }}' \
+            --from-literal=mysql-password='${{ secrets.MYSQL_PASSWORD }}' \
+            --dry-run=client -o yaml | kubectl apply -f -
+
+      - name: Deploy Manifests
+        run: |
+          # Pointing to the local K3s config
+          export KUBECONFIG=/etc/rancher/k3s/k3s.yaml
+          
+          # Apply all manifests in the kubernetes directory
           kubectl apply -f kubernetes/
