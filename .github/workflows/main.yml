@@ -1,0 +1,42 @@
+name: Cloud-Native Stack Pipeline
+
+on:
+  push:
+    branches: [ "main" ]
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+jobs:
+  terraform-check:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: HashiCorp Setup
+        uses: hashicorp/setup-terraform@v3
+
+      - name: Terraform Init & Validate
+        run: |
+          terraform init -backend=false
+          terraform validate
+        working-directory: ./terraform
+
+  deploy:
+    needs: terraform-check
+    runs-on: self-hosted  
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Generate and Apply Secrets
+        run: |
+          export KUBECONFIG=/etc/rancher/k3s/k3s.yaml
+          kubectl create secret generic ghost-db-secrets \
+            --from-literal=mysql-root-password='${{ secrets.MYSQL_ROOT_PASSWORD }}' \
+            --from-literal=mysql-password='${{ secrets.MYSQL_PASSWORD }}' \
+            --dry-run=client -o yaml | kubectl apply -f -
+
+      - name: Deploy Manifests
+        run: |
+          export KUBECONFIG=/etc/rancher/k3s/k3s.yaml
+          kubectl apply -f kubernetes/
