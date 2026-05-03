@@ -35,6 +35,15 @@ spec:
             secretKeyRef:
               name: ghost-db-secrets
               key: mysql-root-password
+        - name: MYSQL_DATABASE
+          value: "ghost"
+        - name: MYSQL_USER
+          value: "ghost"
+        - name: MYSQL_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: ghost-db-secrets
+              key: mysql-password      
         ports:
         - containerPort: 3306
         volumeMounts:
