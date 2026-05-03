@@ -10,6 +10,7 @@ spec:
     - protocol: TCP
       port: 80         
       targetPort: 2368  
+---      
 apiVersion: apps/v1
 kind: Deployment
 metadata:
