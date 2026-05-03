@@ -3,10 +3,16 @@ kind: Ingress
 metadata:
   name: ghost-ingress
   annotations:
-    kubernetes.io/ingress.class: traefik
+    kubernetes.io/ingress.class: traefik 
+    cert-manager.io/cluster-issuer: letsencrypt-prod
 spec:
+  tls:
+  - hosts:
+    - blog.dl4it.com
+    secretName: ghost-tls-cert ere
   rules:
-  - http: 
+  - host: blog.dl4it.com 
+    http:
       paths:
       - path: /
         pathType: Prefix
