@@ -21,3 +21,4 @@ spec:
             name: ghost
             port:
               number: 80
+              
