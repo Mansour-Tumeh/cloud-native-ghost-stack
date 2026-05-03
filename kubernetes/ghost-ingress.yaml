@@ -9,7 +9,7 @@ spec:
   tls:
   - hosts:
     - blog.dl4it.com
-    secretName: ghost-tls-cert ere
+    secretName: ghost-tls-cert
   rules:
   - host: blog.dl4it.com 
     http:
@@ -21,4 +21,3 @@ spec:
             name: ghost
             port:
               number: 80
-              
