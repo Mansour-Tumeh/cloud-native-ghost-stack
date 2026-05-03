@@ -27,7 +27,16 @@ spec:
       containers:
       - name: mysql
         image: mysql:8.0
+      
         args: ["--default-authentication-plugin=mysql_native_password"]
+        
+        resources:
+          requests:
+            cpu: "200m"      # Reserved capacity (0.2 cores)
+            memory: "512Mi"  # Reserved RAM
+          limits:
+            cpu: "1000m"     # Maximum "Burst" capacity (1 full core)
+            memory: "1Gi"    # Absolute ceiling to prevent OOM on the host
         env:
         - name: MYSQL_ROOT_PASSWORD
           valueFrom:
