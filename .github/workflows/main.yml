@@ -40,3 +40,17 @@ jobs:
         run: |
           export KUBECONFIG=/etc/rancher/k3s/k3s.yaml
           kubectl apply -f kubernetes/
+  security-scan:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+      - name: Build Docker Image (Dry Run Test)
+        run: docker build -t ghost-test .
+      - name: Run Trivy vulnerability scanner
+        uses: aquasecurity/trivy-action@master
+        with:
+          image-ref: 'ghost-test'
+          format: 'table'
+          exit-code: '0' 
+          severity: 'CRITICAL,HIGH'
