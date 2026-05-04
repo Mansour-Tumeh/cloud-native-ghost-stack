@@ -41,7 +41,7 @@ variable "vm_cpu_cores" {
 
 variable "vm_memory" {
   type    = number
-  default = 2048
+  default = 4096
 }
 
 variable "vm_user" {
