@@ -1,6 +1,8 @@
 # Cloud-Native Ghost CMS Infrastructure
 > **A high-availability blogging platform engineered on a 3-node bare-metal K3s cluster.**
 
+![Live Platform Frontend](./assets/01.png)
+
 ## 📋 Requirement Mapping
 This project demonstrates the evolution of a standard web service into a modern, containerized infrastructure. It fulfills all capstone requirements as follows:
 
@@ -18,6 +20,29 @@ This project demonstrates the evolution of a standard web service into a modern,
 
 ## 🏗️ Technical Architecture
 The platform utilizes a multi-layered architecture to ensure resilience from the hardware up to the application.
+
+### Architecture Diagram
+```mermaid
+graph TD
+  subgraph Proxmox Bare Metal Server
+    subgraph K3s Cluster
+      Traefik[Traefik Ingress]
+      subgraph Ghost Deployment
+        Ghost1[Ghost Replica 1]
+        Ghost2[Ghost Replica 2]
+      end
+      MySQL[(MySQL StatefulSet)]
+      Longhorn[Longhorn Storage]
+    end
+  end
+
+  Internet((Internet)) -->|HTTPS| Traefik
+  Traefik -->|Load Balances| Ghost1
+  Traefik -->|Load Balances| Ghost2
+  Ghost1 --> MySQL
+  Ghost2 --> MySQL
+  MySQL --> Longhorn
+```
 
 ### 1. Infrastructure Layer (IaC)
 *   **Hypervisor**: Proxmox VE running on bare-metal hardware.
@@ -51,6 +76,8 @@ Deployment is fully automated via a **self-hosted GitHub Actions runner** that:
 2.  Securely injects **GitHub Secrets** (Database passwords, Proxmox tokens) into the cluster.
 3.  Applies declarative Kubernetes manifests for the application stack.
 
+![CI/CD Pipeline Workflow](./assets/06.png)
+
 ---
 
 ## 🚦 Troubleshooting & Resilience
@@ -62,6 +89,12 @@ Initial deployments encountered stability issues due to memory constraints.
 ### Storage Persistence
 Managed **ReadWriteOnce (RWO)** constraints to prevent volume-mounting deadlocks.
 *   **Resolution**: Migrated the database from a standard Deployment to a **StatefulSet** to ensure PVCs remain bound to the correct pod identity across restarts.
+
+### 🔄 Disaster Recovery Strategy
+Every real system must plan for failure. This platform ensures high availability and disaster recovery through the following mechanisms:
+*   **Node Failure Recovery**: If one of the 3 Proxmox nodes crashes, the K3s scheduler automatically detects the node failure and reschedules the affected Pods (Ghost or MySQL) to the surviving healthy nodes.
+*   **Storage Replication**: The MySQL database relies on Longhorn for block storage. Longhorn automatically replicates the persistent volume data synchronously across all 3 nodes. If a node holding the database goes offline, K3s spins up MySQL on a new node, and Longhorn seamlessly attaches the replicated storage volume to it—resulting in zero data loss.
+*   **Infrastructure Rollback**: Because all infrastructure is defined via declarative Terraform code and Kubernetes manifests, recovering the entire cluster from scratch (or rolling back a bad deployment) is as simple as reverting the Git commit and running `terraform apply` or triggering the CI/CD pipeline.
 
 ---
 
